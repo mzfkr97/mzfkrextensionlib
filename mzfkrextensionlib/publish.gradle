@@ -1,0 +1,52 @@
+apply plugin: 'maven-publish'
+
+def LIB_GROUP_ID = 'io.github.mzfkr97'
+def LIB_ARTIFACT_ID = 'mzfkrextensionlib'
+def LIB_VERSION = '1.0.0'
+
+task sourceJar(type: Jar) {
+    from android.sourceSets.main.java.srcDirs
+    classifier "sources"
+}
+
+publishing {
+    repositories {
+        maven {
+            name = "mzfkrextensionlib"
+            url = uri("https://github.com/mzfkr97/mzfkrextensionlib")
+
+        }
+        maven {
+            name = 'mzfkrextensionlib'
+            url = "file://${buildDir}/repo"
+        }
+    }
+    publications {
+        solbeglib(MavenPublication) {
+            groupId LIB_GROUP_ID
+            artifactId LIB_ARTIFACT_ID
+            version LIB_VERSION
+            artifact("$buildDir/outputs/aar/mzfkrextensionlib-release.aar")
+            artifact(sourceJar)
+            pom.withXml {
+                def dependenciesNode = asNode().appendNode('dependencies')
+                configurations.implementation.allDependencies.each { dependency ->
+                    if (dependency.name != 'unspecified') {
+                        def dependencyNode = dependenciesNode.appendNode('dependency')
+                        dependencyNode.appendNode('groupId', dependency.group)
+                        dependencyNode.appendNode('artifactId', dependency.name)
+                        dependencyNode.appendNode('version', dependency.version)
+                    }
+                }
+                configurations.api.allDependencies.each { dependency ->
+                    if (dependency.name != 'unspecified') {
+                        def dependencyNode = dependenciesNode.appendNode('dependency')
+                        dependencyNode.appendNode('groupId', dependency.group)
+                        dependencyNode.appendNode('artifactId', dependency.name)
+                        dependencyNode.appendNode('version', dependency.version)
+                    }
+                }
+            }
+        }
+    }
+}
